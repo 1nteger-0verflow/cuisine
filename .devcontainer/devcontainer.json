@@ -73,6 +73,8 @@
                 "oderwat.indent-rainbow",
                 "JScearcy.rust-doc-viewer",
                 "Swellaby.vscode-rust-test-adapter",
+                "alexcvzz.vscode-sqlite",
+                "humao.rest-client",
                 "-dbaeumer.vscode-eslint"
             ]
         }
