@@ -8,7 +8,7 @@ use crate::{
 pub async fn list_recipes(pool: &SqlitePool) -> Result<Vec<Recipe>, AppError> {
     let recipes = sqlx::query_as!(
         Recipe,
-        r#"SELECT id as "id!", name_french, description_japanese, difficulty, created_at
+        r#"SELECT id as "id!", name_french, description_japanese, difficulty as "difficulty: _", created_at
            FROM recipes
            ORDER BY name_french"#
     )
@@ -20,7 +20,7 @@ pub async fn list_recipes(pool: &SqlitePool) -> Result<Vec<Recipe>, AppError> {
 pub async fn get_recipe(pool: &SqlitePool, id: i64) -> Result<Recipe, AppError> {
     let recipe: Option<Recipe> = sqlx::query_as!(
         Recipe,
-        r#"SELECT id as "id!", name_french, description_japanese, difficulty, created_at
+        r#"SELECT id as "id!", name_french, description_japanese, difficulty as "difficulty: _", created_at
            FROM recipes WHERE id = ?"#,
         id
     )
@@ -63,7 +63,7 @@ pub async fn create_recipe(pool: &SqlitePool, new: NewRecipe) -> Result<Recipe, 
         Recipe,
         r#"INSERT INTO recipes (name_french, description_japanese, difficulty)
            VALUES (?, ?, ?)
-           RETURNING id as "id!", name_french, description_japanese, difficulty, created_at"#,
+           RETURNING id as "id!", name_french, description_japanese, difficulty as "difficulty: _", created_at"#,
         new.name_french,
         new.description_japanese,
         new.difficulty
@@ -88,7 +88,7 @@ pub async fn update_recipe(
         r#"UPDATE recipes
            SET name_french = ?, description_japanese = ?, difficulty = ?
            WHERE id = ?
-           RETURNING id as "id!", name_french, description_japanese, difficulty, created_at"#,
+           RETURNING id as "id!", name_french, description_japanese, difficulty as "difficulty: _", created_at"#,
         name_french,
         description_japanese,
         difficulty,
@@ -114,8 +114,8 @@ mod tests {
     use crate::{
         db::terms::create_term,
         models::{
-            recipe::{NewRecipe, UpdateRecipe},
-            term::NewTerm,
+            recipe::{Difficulty, NewRecipe, UpdateRecipe},
+            term::{Category, NewTerm},
         },
     };
 
@@ -153,7 +153,7 @@ mod tests {
             NewTerm {
                 french: "safran".to_string(),
                 japanese: "サフラン".to_string(),
-                category: "ingredient".to_string(),
+                category: Category::Ingredient,
                 notes: None,
             },
         )
@@ -184,7 +184,7 @@ mod tests {
             NewRecipe {
                 name_french: "bouillabaisse".to_string(),
                 description_japanese: None,
-                difficulty: Some("hard".to_string()),
+                difficulty: Some(Difficulty::Hard),
             },
         )
         .await
@@ -197,7 +197,7 @@ mod tests {
         let updated = update_recipe(&pool, recipe.id, update).await.unwrap();
         assert_eq!(updated.name_french, "bouillabaisse");
         assert_eq!(updated.description_japanese.as_deref(), Some("マルセイユの魚介スープ"));
-        assert_eq!(updated.difficulty.as_deref(), Some("hard"));
+        assert_eq!(updated.difficulty, Some(Difficulty::Hard));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -208,7 +208,7 @@ mod tests {
             NewTerm {
                 french: "safran".to_string(),
                 japanese: "サフラン".to_string(),
-                category: "ingredient".to_string(),
+                category: Category::Ingredient,
                 notes: None,
             },
         )

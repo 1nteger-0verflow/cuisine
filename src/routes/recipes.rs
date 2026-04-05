@@ -7,7 +7,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     db::recipes,
-    error::AppError,
+    error::{AppError, AppJson},
     models::recipe::{NewRecipe, Recipe, RecipeDetail, UpdateRecipe},
 };
 
@@ -28,7 +28,7 @@ pub async fn get_recipe(
 
 pub async fn create_recipe(
     State(pool): State<SqlitePool>,
-    Json(body): Json<NewRecipe>,
+    AppJson(body): AppJson<NewRecipe>,
 ) -> Result<(StatusCode, Json<Recipe>), AppError> {
     let recipe = recipes::create_recipe(&pool, body).await?;
     Ok((StatusCode::CREATED, Json(recipe)))
@@ -37,7 +37,7 @@ pub async fn create_recipe(
 pub async fn update_recipe(
     State(pool): State<SqlitePool>,
     Path(id): Path<i64>,
-    Json(body): Json<UpdateRecipe>,
+    AppJson(body): AppJson<UpdateRecipe>,
 ) -> Result<Json<Recipe>, AppError> {
     let recipe = recipes::update_recipe(&pool, id, body).await?;
     Ok(Json(recipe))

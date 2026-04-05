@@ -1,12 +1,21 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
+#[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone, PartialEq)]
+#[sqlx(type_name = "TEXT", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum Difficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Recipe {
     pub id: i64,
     pub name_french: String,
     pub description_japanese: Option<String>,
-    pub difficulty: Option<String>,
+    pub difficulty: Option<Difficulty>,
     pub created_at: String,
 }
 
@@ -39,12 +48,12 @@ pub struct RecipeStep {
 pub struct NewRecipe {
     pub name_french: String,
     pub description_japanese: Option<String>,
-    pub difficulty: Option<String>,
+    pub difficulty: Option<Difficulty>,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct UpdateRecipe {
     pub name_french: Option<String>,
     pub description_japanese: Option<String>,
-    pub difficulty: Option<String>,
+    pub difficulty: Option<Difficulty>,
 }

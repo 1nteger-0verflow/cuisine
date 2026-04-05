@@ -7,7 +7,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     db::terms,
-    error::AppError,
+    error::{AppError, AppJson},
     models::term::{NewTerm, Term, TermQuery, UpdateTerm},
 };
 
@@ -29,7 +29,7 @@ pub async fn get_term(
 
 pub async fn create_term(
     State(pool): State<SqlitePool>,
-    Json(body): Json<NewTerm>,
+    AppJson(body): AppJson<NewTerm>,
 ) -> Result<(StatusCode, Json<Term>), AppError> {
     let term = terms::create_term(&pool, body).await?;
     Ok((StatusCode::CREATED, Json(term)))
@@ -38,7 +38,7 @@ pub async fn create_term(
 pub async fn update_term(
     State(pool): State<SqlitePool>,
     Path(id): Path<i64>,
-    Json(body): Json<UpdateTerm>,
+    AppJson(body): AppJson<UpdateTerm>,
 ) -> Result<Json<Term>, AppError> {
     let term = terms::update_term(&pool, id, body).await?;
     Ok(Json(term))
