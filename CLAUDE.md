@@ -101,3 +101,37 @@ recipe_ingredients recipe_id→recipes, term_id→terms, quantity, notes  PK(rec
 - **Partial update pattern**: fetch existing row → merge `Option` fields → UPDATE all columns (avoids dynamic SQL)
 - **`get_recipe_detail`**: uses 3 separate queries (recipe + ingredients JOIN terms + steps) assembled in Rust, not one cartesian JOIN
 - **DATABASE_URL**: required at compile time for sqlx query macros; store in `.env` (not committed)
+
+## Rust Robustness Guidelines
+
+### Error Handling
+- Avoid `unwrap()` / `expect()` in non-test code — use `?` or `match`
+- Use a custom error enum (`AppError`) with `thiserror` or manual `impl`; already done in `error.rs`
+- Attach context to errors with `.map_err` or `anyhow::Context` before propagating
+
+### Type System
+- **Newtype pattern**: wrap primitives in `struct UserId(i64)` to prevent value mix-ups
+- Model domain states with `enum`, not bare `String`, so invalid values are rejected at compile time
+- Prefer constrained standard types (`NonZeroU32`, etc.) where applicable
+
+### Input Validation
+- Validate at the boundary (DTO structs like `NewTerm`, `UpdateTerm`) before touching the DB
+- Combine DB-level `CHECK` constraints with Rust-side `enum` for double protection
+
+### Concurrency & Memory
+- Prefer inherently thread-safe types (`SqlitePool` via `State<SqlitePool>`) over `Arc<Mutex<T>>`
+- Audit `clone()` calls — avoid cloning large structures unnecessarily
+
+### Testing
+- Use `#[sqlx::test(migrations = "./migrations")]` for isolated per-test DB instances (already adopted)
+- Cover error paths: 404, 400, duplicate key, constraint violation — not only happy paths
+- Run `cargo test` and `cargo clippy -- -D warnings` together; treat any warning as a failure
+
+### Toolchain
+- `cargo audit --ignore RUSTSEC-2023-0071` — re-evaluate the ignore when an rsa fix lands
+- `cargo fmt` — enforce consistent formatting in CI
+- Consider `cargo deny` for license/dependency auditing if the dependency tree grows
+
+### Project-Specific Improvements (Backlog)
+- `AppError::BadRequest` could carry `{ field: &'static str, reason: String }` for richer error responses
+- `term.rs` `category` field: migrate from `String` to `enum Category` so invalid categories are rejected by the type system, not only by the DB `CHECK` constraint
