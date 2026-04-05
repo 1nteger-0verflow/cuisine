@@ -25,6 +25,12 @@ cargo test --test terms_api      # run specific integration test file
 cargo clippy -- -D warnings
 cargo fmt
 
+# Security audit
+cargo audit --ignore RUSTSEC-2023-0071
+# RUSTSEC-2023-0071 (rsa Marvin Attack) is ignored because it comes via sqlx-mysql,
+# which sqlx's macro layer unconditionally compiles even though this project uses SQLite only.
+# See audit.toml for details. Re-evaluate when a fix for rsa becomes available.
+
 # Migrations (when adding new tables/columns)
 sqlx migrate add <name>          # create new migration file in migrations/
 sqlx migrate run                 # apply pending migrations to cuisine.db

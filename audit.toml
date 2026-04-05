@@ -1,0 +1,9 @@
+[advisories]
+ignore = [
+    # RUSTSEC-2023-0071: Marvin Attack timing side-channel in `rsa` crate.
+    # Pulled in transitively via sqlx-mysql (sqlx's macro layer compiles all backends).
+    # This project uses SQLite only — MySQL is never used at runtime.
+    # No fixed version of `rsa` is available upstream as of 2026-04-05.
+    # Re-evaluate when sqlx separates macro compilation per backend, or rsa publishes a fix.
+    { id = "RUSTSEC-2023-0071", reason = "sqlx-mysql transitive dep, SQLite-only project, no fix available" },
+]
