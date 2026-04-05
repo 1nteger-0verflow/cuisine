@@ -29,7 +29,7 @@ pub struct RecipeDetail {
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct RecipeIngredient {
-    pub term_id: i64,
+    pub ingredient_id: i64,
     pub french: String,
     pub japanese: String,
     pub quantity: Option<String>,

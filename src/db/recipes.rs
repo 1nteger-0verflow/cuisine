@@ -34,11 +34,11 @@ pub async fn get_recipe_detail(pool: &SqlitePool, id: i64) -> Result<RecipeDetai
 
     let ingredients = sqlx::query_as!(
         RecipeIngredient,
-        r#"SELECT t.id as "term_id!", t.french, t.japanese, ri.quantity, ri.notes
+        r#"SELECT i.id as "ingredient_id!", i.french, i.japanese, ri.quantity, ri.notes
            FROM recipe_ingredients ri
-           JOIN terms t ON t.id = ri.term_id
+           JOIN ingredients i ON i.id = ri.ingredient_id
            WHERE ri.recipe_id = ?
-           ORDER BY t.french"#,
+           ORDER BY i.french"#,
         id
     )
     .fetch_all(pool)
@@ -112,10 +112,10 @@ pub async fn delete_recipe(pool: &SqlitePool, id: i64) -> Result<(), AppError> {
 mod tests {
     use super::*;
     use crate::{
-        db::terms::create_term,
+        db::ingredients::create_ingredient,
         models::{
+            ingredient::NewIngredient,
             recipe::{Difficulty, NewRecipe, UpdateRecipe},
-            term::{Category, NewTerm},
         },
     };
 
@@ -148,12 +148,13 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_recipe_detail_with_ingredients(pool: SqlitePool) {
         let recipe = create_recipe(&pool, new_recipe("bouillabaisse")).await.unwrap();
-        let term = create_term(
+        let term = create_ingredient(
             &pool,
-            NewTerm {
+            NewIngredient {
                 french: "safran".to_string(),
                 japanese: "サフラン".to_string(),
-                category: Category::Ingredient,
+                reading: None,
+                genre: None,
                 notes: None,
             },
         )
@@ -161,7 +162,7 @@ mod tests {
         .unwrap();
 
         sqlx::query!(
-            "INSERT INTO recipe_ingredients (recipe_id, term_id, quantity) VALUES (?, ?, ?)",
+            "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES (?, ?, ?)",
             recipe.id,
             term.id,
             "1 pinch"
@@ -203,12 +204,13 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn test_delete_recipe_cascades(pool: SqlitePool) {
         let recipe = create_recipe(&pool, new_recipe("bouillabaisse")).await.unwrap();
-        let term = create_term(
+        let term = create_ingredient(
             &pool,
-            NewTerm {
+            NewIngredient {
                 french: "safran".to_string(),
                 japanese: "サフラン".to_string(),
-                category: Category::Ingredient,
+                reading: None,
+                genre: None,
                 notes: None,
             },
         )
@@ -216,7 +218,7 @@ mod tests {
         .unwrap();
 
         sqlx::query!(
-            "INSERT INTO recipe_ingredients (recipe_id, term_id) VALUES (?, ?)",
+            "INSERT INTO recipe_ingredients (recipe_id, ingredient_id) VALUES (?, ?)",
             recipe.id,
             term.id
         )

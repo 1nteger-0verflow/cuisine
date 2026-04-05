@@ -4,7 +4,10 @@
       "Bash(cargo audit:*)",
       "Bash(cargo build:*)",
       "Bash(cargo clean:*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(sqlite3 cuisine.db)",
+      "Bash(sqlite3:*)",
+      "Bash(cargo clippy:*)"
     ]
   }
 }

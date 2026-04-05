@@ -1,44 +1,42 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone, PartialEq)]
-#[sqlx(type_name = "TEXT", rename_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
-pub enum Category {
-    Dish,
-    Ingredient,
-    Utensil,
-    Technique,
-}
+use crate::models::relation::RelatedTermRef;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
-pub struct Term {
+pub struct Technique {
     pub id: i64,
     pub french: String,
     pub japanese: String,
-    pub category: Category,
+    pub reading: Option<String>,
     pub notes: Option<String>,
     pub created_at: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TechniqueDetail {
+    #[serde(flatten)]
+    pub technique: Technique,
+    pub related_terms: Vec<RelatedTermRef>,
+}
+
 #[derive(Debug, Deserialize)]
-pub struct NewTerm {
+pub struct NewTechnique {
     pub french: String,
     pub japanese: String,
-    pub category: Category,
+    pub reading: Option<String>,
     pub notes: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct UpdateTerm {
+pub struct UpdateTechnique {
     pub french: Option<String>,
     pub japanese: Option<String>,
-    pub category: Option<Category>,
+    pub reading: Option<String>,
     pub notes: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TermQuery {
-    pub category: Option<Category>,
+pub struct TechniqueQuery {
     pub q: Option<String>,
 }

@@ -1,2 +1,6 @@
+pub mod dish;
+pub mod ingredient;
 pub mod recipe;
-pub mod term;
+pub mod relation;
+pub mod technique;
+pub mod utensil;
