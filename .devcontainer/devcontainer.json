@@ -1,5 +1,5 @@
 {
-    "name": "rust-devcontainer",
+    "name": "cuisine",
     "image": "mcr.microsoft.com/devcontainers/base:trixie",
     "containerEnv": {
         "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
@@ -12,7 +12,7 @@
             "installOhMyZshConfig": "true"
         },
         "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-            "packages": "curl,wget,git,ca-certificates,build-essential"
+            "packages": "sudo,curl,wget,git,ca-certificates,build-essential"
         },
         "ghcr.io/devcontainers/features/rust:1": {
             "version": "latest"
@@ -21,9 +21,6 @@
         "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": { }
     },
     "runArgs": [ "--init", "--rm" ],
-    "hostRequirements": {
-        "gpu": "optional"
-    },
     "containerUser": "vscode",
     "remoteUser": "vscode",
     "updateRemoteUserUID": true,
@@ -75,14 +72,12 @@
                 "tamasfe.even-better-toml",
                 "oderwat.indent-rainbow",
                 "JScearcy.rust-doc-viewer",
-                "Swellaby.vscode-rust-test-adapter"
+                "Swellaby.vscode-rust-test-adapter",
+                "-dbaeumer.vscode-eslint"
             ]
         }
     },
-    // "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude && touch ${localEnv:HOME}/.claude/CLAUDE.md",
     "mounts": [
-        // "source=shell_history-${devcontainerId},target=/shell_history,type=volume",
-        // "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
-        // "source=${localEnv:HOME}/.claude/CLAUDE.md,target=/home/vscode/.claude/CLAUDE.md,type=bind"
+        "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind"
     ]
 }
