@@ -1,0 +1,88 @@
+{
+    "name": "rust-devcontainer",
+    "image": "mcr.microsoft.com/devcontainers/base:trixie",
+    "containerEnv": {
+        "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "configureZshAsDefaultShell": true,
+            "installZsh": "true",
+            "installOhMyZsh": "true",
+            "installOhMyZshConfig": "true"
+        },
+        "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+            "packages": "curl,wget,git,ca-certificates,build-essential"
+        },
+        "ghcr.io/devcontainers/features/rust:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": { },
+        "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": { }
+    },
+    "runArgs": [ "--init", "--rm" ],
+    "hostRequirements": {
+        "gpu": "optional"
+    },
+    "containerUser": "vscode",
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+    "customizations": {
+        "vscode": {
+            "settings": {
+                // Util
+                "editor.tabSize": 4,
+                "editor.formatOnSave": false,
+                "debug.inlineValues": "auto",
+                "zenMode.hideLineNumbers": false,
+                "git-graph.dialog.merge.noFastForward": false,
+                "git-graph.dialog.rebase.launchInteractiveRebase": false,
+                "git-graph.dialog.rebase.ignoreDate": false,
+                "git-graph.repository.fetchAndPrune": true,
+                "files.eol": "\n",
+                // Rust
+                "[rust]": {
+                    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+                    "editor.formatOnSave": true,
+                    "editor.inlayHints.enabled": "off"
+                },
+                "rust-analyzer.server.path": "rust-analyzer",
+                "rust-analyzer.checkOnSave.enable": true,
+                "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+                // Json
+                "[json][jsonc]": {
+                    "editor.formatOnSave": true,
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "prettier.tabWidth": 4,
+                // Yaml
+                "[yaml]": {
+                    "editor.formatOnSave": true,
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 4,
+                    "editor.indentSize": 2,
+                    "editor.autoIndent": "advanced"
+                },
+                "cSpell.allowCompoundWords": true,
+                "cSpell.enabled": true,
+                "cSpell.words": [ "tqdm" ],
+                "cSpell.spellCheckOnlyWorkspaceFiles": true,
+                "cSpell.ignoreRegExpList": [ "[A-Z0-9]+" ],
+            },
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "mhutchie.git-graph",
+                "tamasfe.even-better-toml",
+                "oderwat.indent-rainbow",
+                "JScearcy.rust-doc-viewer",
+                "Swellaby.vscode-rust-test-adapter"
+            ]
+        }
+    },
+    // "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude && touch ${localEnv:HOME}/.claude/CLAUDE.md",
+    "mounts": [
+        // "source=shell_history-${devcontainerId},target=/shell_history,type=volume",
+        // "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+        // "source=${localEnv:HOME}/.claude/CLAUDE.md,target=/home/vscode/.claude/CLAUDE.md,type=bind"
+    ]
+}
