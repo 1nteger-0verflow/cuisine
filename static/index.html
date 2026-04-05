@@ -235,6 +235,15 @@
     /* Empty / loading */
     .empty { text-align: center; padding: 48px 16px; color: var(--muted); }
     .empty svg { width: 44px; height: 44px; margin-bottom: 10px; opacity: .3; }
+
+    /* Term link in notes */
+    .term-link {
+      background: none; border: none; padding: 0;
+      color: var(--primary); font: inherit; cursor: pointer;
+      text-decoration: underline; text-decoration-color: var(--primary-light);
+      font-weight: 600;
+    }
+    .term-link:hover { text-decoration-color: var(--primary); }
   </style>
 </head>
 <body>
@@ -306,6 +315,7 @@ let item  = null;   // current detail
 let q     = '';
 let genre = null;
 let isEdit = false;
+let glossaryCache = null;  // Array<{cat,id,french}> | null
 
 // ── Config ─────────────────────────────────────────────
 const TABS = {
@@ -331,6 +341,60 @@ const TABS = {
 
 const CAT_EP = { dish:'/dishes', ingredient:'/ingredients', utensil:'/utensils', technique:'/techniques' };
 const CAT_LBL = { dish:'料理', ingredient:'食材', utensil:'器具', technique:'テクニック' };
+
+// ── Glossary cache & note linking ──────────────────────
+async function ensureGlossaryCache() {
+  if (glossaryCache !== null) return;
+  try {
+    const [dishes, ingredients, utensils, techniques] = await Promise.all([
+      api('GET', '/dishes'), api('GET', '/ingredients'),
+      api('GET', '/utensils'), api('GET', '/techniques'),
+    ]);
+    glossaryCache = [
+      ...dishes.map(d      => ({ cat: 'dish',       id: d.id, french: d.french })),
+      ...ingredients.map(i => ({ cat: 'ingredient', id: i.id, french: i.french })),
+      ...utensils.map(u    => ({ cat: 'utensil',    id: u.id, french: u.french })),
+      ...techniques.map(t  => ({ cat: 'technique',  id: t.id, french: t.french })),
+    ];
+  } catch(e) { glossaryCache = []; }
+}
+
+function linkNotes(text) {
+  if (!glossaryCache || glossaryCache.length === 0) return h(text);
+  const matches = [];
+  for (const entry of glossaryCache) {
+    const escaped = entry.french.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'gi');
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      matches.push({ start: m.index, end: m.index + m[0].length, entry });
+    }
+  }
+  matches.sort((a, b) => a.start - b.start || b.end - a.end);
+  const parts = [];
+  let lastEnd = 0;
+  for (const m of matches) {
+    if (m.start >= lastEnd) { parts.push(m); lastEnd = m.end; }
+  }
+  let result = '', pos = 0;
+  for (const m of parts) {
+    result += h(text.slice(pos, m.start));
+    result += `<button class="term-link" onclick="openTermById('${m.entry.cat}',${m.entry.id})">${h(text.slice(m.start, m.end))}</button>`;
+    pos = m.end;
+  }
+  return result + h(text.slice(pos));
+}
+
+async function openTermById(cat, id) {
+  const tabMap = { dish:'dishes', ingredient:'ingredients', utensil:'utensils', technique:'techniques' };
+  const newTab = tabMap[cat];
+  if (!newTab) return;
+  tab = newTab;
+  try {
+    item = await api('GET', `${CAT_EP[cat]}/${id}`);
+    renderDetail();
+  } catch(e) { alert('エラー: ' + e.message); }
+}
 
 // ── API ────────────────────────────────────────────────
 async function api(method, path, body) {
@@ -417,6 +481,7 @@ async function openDetail(idx) {
   const c = TABS[tab];
   try {
     item = await api('GET', `${c.ep}/${items[idx].id}`);
+    await ensureGlossaryCache();
     renderDetail();
     document.getElementById('detailView').classList.add('on');
   } catch(e) { alert('エラー: ' + e.message); }
@@ -474,7 +539,7 @@ function renderDetail() {
         <span class="badge" style="font-size:13px;padding:4px 12px">${c.gl[item.genre]}</span></div>`;
     }
     if (item.notes) {
-      html += `<div class="sec"><div class="sec-title">メモ</div><div class="sec-text">${h(item.notes)}</div></div>`;
+      html += `<div class="sec"><div class="sec-title">メモ</div><div class="sec-text">${linkNotes(item.notes)}</div></div>`;
     }
     // Related terms
     html += `<div class="sec"><div class="sec-title">関連用語</div>
@@ -613,6 +678,7 @@ function fgSelect(label, name, val, opts) {
 }
 
 async function submitForm() {
+  if (TABS[tab] && !TABS[tab].isRecipe) glossaryCache = null;
   const c = TABS[tab];
   const sheet = document.querySelector('.sheet');
   const body = {};
@@ -636,6 +702,7 @@ async function submitForm() {
 
 async function deleteItem() {
   if (!confirm('削除しますか？')) return;
+  if (TABS[tab] && !TABS[tab].isRecipe) glossaryCache = null;
   const c = TABS[tab];
   try {
     await api('DELETE', `${c.ep}/${itemId()}`);
