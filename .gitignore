@@ -23,3 +23,14 @@ target
 # CLAUDE.md
 # .vscode
 # .pre-commit-config.yaml
+
+# SQLite database files
+cuisine.db
+cuisine.db-shm
+cuisine.db-wal
+
+# Environment variables (contains DATABASE_URL)
+.env
+
+# sqlx offline query cache
+.sqlx/
