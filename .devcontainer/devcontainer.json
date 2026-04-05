@@ -12,7 +12,7 @@
             "installOhMyZshConfig": "true"
         },
         "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-            "packages": "sudo,curl,wget,git,ca-certificates,build-essential"
+            "packages": "sudo,curl,wget,git,ca-certificates,build-essential,sqlite3"
         },
         "ghcr.io/devcontainers/features/rust:1": {
             "version": "latest"
@@ -60,6 +60,8 @@
                     "editor.indentSize": 2,
                     "editor.autoIndent": "advanced"
                 },
+                // SQLite
+                "sqlite.sqlite3": "/usr/bin/sqlite3",
                 "cSpell.allowCompoundWords": true,
                 "cSpell.enabled": true,
                 "cSpell.words": [ "tqdm" ],
