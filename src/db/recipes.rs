@@ -2,15 +2,13 @@ use sqlx::SqlitePool;
 
 use crate::{
     error::AppError,
-    models::recipe::{
-        NewRecipe, Recipe, RecipeDetail, RecipeIngredient, RecipeStep, UpdateRecipe,
-    },
+    models::recipe::{NewRecipe, Recipe, RecipeDetail, RecipeIngredient, RecipeStep, UpdateRecipe},
 };
 
 pub async fn list_recipes(pool: &SqlitePool) -> Result<Vec<Recipe>, AppError> {
     let recipes = sqlx::query_as!(
         Recipe,
-        r#"SELECT id, name_french, description_japanese, difficulty, created_at
+        r#"SELECT id as "id!", name_french, description_japanese, difficulty, created_at
            FROM recipes
            ORDER BY name_french"#
     )
@@ -20,15 +18,15 @@ pub async fn list_recipes(pool: &SqlitePool) -> Result<Vec<Recipe>, AppError> {
 }
 
 pub async fn get_recipe(pool: &SqlitePool, id: i64) -> Result<Recipe, AppError> {
-    sqlx::query_as!(
+    let recipe: Option<Recipe> = sqlx::query_as!(
         Recipe,
-        r#"SELECT id, name_french, description_japanese, difficulty, created_at
+        r#"SELECT id as "id!", name_french, description_japanese, difficulty, created_at
            FROM recipes WHERE id = ?"#,
         id
     )
     .fetch_optional(pool)
-    .await?
-    .ok_or(AppError::NotFound)
+    .await?;
+    recipe.ok_or(AppError::NotFound)
 }
 
 pub async fn get_recipe_detail(pool: &SqlitePool, id: i64) -> Result<RecipeDetail, AppError> {
@@ -36,7 +34,7 @@ pub async fn get_recipe_detail(pool: &SqlitePool, id: i64) -> Result<RecipeDetai
 
     let ingredients = sqlx::query_as!(
         RecipeIngredient,
-        r#"SELECT t.id as term_id, t.french, t.japanese, ri.quantity, ri.notes
+        r#"SELECT t.id as "term_id!", t.french, t.japanese, ri.quantity, ri.notes
            FROM recipe_ingredients ri
            JOIN terms t ON t.id = ri.term_id
            WHERE ri.recipe_id = ?
@@ -48,7 +46,7 @@ pub async fn get_recipe_detail(pool: &SqlitePool, id: i64) -> Result<RecipeDetai
 
     let steps = sqlx::query_as!(
         RecipeStep,
-        r#"SELECT id, step_number, instruction_french, instruction_japanese
+        r#"SELECT id as "id!", step_number as "step_number!", instruction_french, instruction_japanese
            FROM recipe_steps
            WHERE recipe_id = ?
            ORDER BY step_number"#,
@@ -65,7 +63,7 @@ pub async fn create_recipe(pool: &SqlitePool, new: NewRecipe) -> Result<Recipe, 
         Recipe,
         r#"INSERT INTO recipes (name_french, description_japanese, difficulty)
            VALUES (?, ?, ?)
-           RETURNING id, name_french, description_japanese, difficulty, created_at"#,
+           RETURNING id as "id!", name_french, description_japanese, difficulty, created_at"#,
         new.name_french,
         new.description_japanese,
         new.difficulty
@@ -90,7 +88,7 @@ pub async fn update_recipe(
         r#"UPDATE recipes
            SET name_french = ?, description_japanese = ?, difficulty = ?
            WHERE id = ?
-           RETURNING id, name_french, description_japanese, difficulty, created_at"#,
+           RETURNING id as "id!", name_french, description_japanese, difficulty, created_at"#,
         name_french,
         description_japanese,
         difficulty,
@@ -102,9 +100,8 @@ pub async fn update_recipe(
 }
 
 pub async fn delete_recipe(pool: &SqlitePool, id: i64) -> Result<(), AppError> {
-    let result = sqlx::query!("DELETE FROM recipes WHERE id = ?", id)
-        .execute(pool)
-        .await?;
+    let result: sqlx::sqlite::SqliteQueryResult =
+        sqlx::query!("DELETE FROM recipes WHERE id = ?", id).execute(pool).await?;
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound);
     }
@@ -123,11 +120,7 @@ mod tests {
     };
 
     fn new_recipe(name: &str) -> NewRecipe {
-        NewRecipe {
-            name_french: name.to_string(),
-            description_japanese: None,
-            difficulty: None,
-        }
+        NewRecipe { name_french: name.to_string(), description_japanese: None, difficulty: None }
     }
 
     #[sqlx::test(migrations = "./migrations")]

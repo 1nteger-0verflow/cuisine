@@ -11,7 +11,7 @@ pub async fn list_terms(pool: &SqlitePool, query: &TermQuery) -> Result<Vec<Term
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Term,
-                r#"SELECT id, french, japanese, category, notes, created_at
+                r#"SELECT id as "id!", french, japanese, category, notes, created_at
                    FROM terms
                    WHERE category = ? AND (french LIKE ? OR japanese LIKE ?)
                    ORDER BY french"#,
@@ -25,7 +25,7 @@ pub async fn list_terms(pool: &SqlitePool, query: &TermQuery) -> Result<Vec<Term
         (Some(cat), None) => {
             sqlx::query_as!(
                 Term,
-                r#"SELECT id, french, japanese, category, notes, created_at
+                r#"SELECT id as "id!", french, japanese, category, notes, created_at
                    FROM terms
                    WHERE category = ?
                    ORDER BY french"#,
@@ -38,7 +38,7 @@ pub async fn list_terms(pool: &SqlitePool, query: &TermQuery) -> Result<Vec<Term
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Term,
-                r#"SELECT id, french, japanese, category, notes, created_at
+                r#"SELECT id as "id!", french, japanese, category, notes, created_at
                    FROM terms
                    WHERE french LIKE ? OR japanese LIKE ?
                    ORDER BY french"#,
@@ -51,7 +51,7 @@ pub async fn list_terms(pool: &SqlitePool, query: &TermQuery) -> Result<Vec<Term
         (None, None) => {
             sqlx::query_as!(
                 Term,
-                r#"SELECT id, french, japanese, category, notes, created_at
+                r#"SELECT id as "id!", french, japanese, category, notes, created_at
                    FROM terms
                    ORDER BY french"#
             )
@@ -63,14 +63,15 @@ pub async fn list_terms(pool: &SqlitePool, query: &TermQuery) -> Result<Vec<Term
 }
 
 pub async fn get_term(pool: &SqlitePool, id: i64) -> Result<Term, AppError> {
-    sqlx::query_as!(
+    let term: Option<Term> = sqlx::query_as!(
         Term,
-        r#"SELECT id, french, japanese, category, notes, created_at FROM terms WHERE id = ?"#,
+        r#"SELECT id as "id!", french, japanese, category, notes, created_at
+           FROM terms WHERE id = ?"#,
         id
     )
     .fetch_optional(pool)
-    .await?
-    .ok_or(AppError::NotFound)
+    .await?;
+    term.ok_or(AppError::NotFound)
 }
 
 pub async fn create_term(pool: &SqlitePool, new: NewTerm) -> Result<Term, AppError> {
@@ -78,14 +79,22 @@ pub async fn create_term(pool: &SqlitePool, new: NewTerm) -> Result<Term, AppErr
         Term,
         r#"INSERT INTO terms (french, japanese, category, notes)
            VALUES (?, ?, ?, ?)
-           RETURNING id, french, japanese, category, notes, created_at"#,
+           RETURNING id as "id!", french, japanese, category, notes, created_at"#,
         new.french,
         new.japanese,
         new.category,
         new.notes
     )
     .fetch_one(pool)
-    .await?;
+    .await
+    .map_err(|e| {
+        if let sqlx::Error::Database(ref db_err) = e
+            && db_err.message().contains("CHECK constraint failed")
+        {
+            return AppError::BadRequest(format!("invalid category: {}", new.category));
+        }
+        AppError::Db(e)
+    })?;
     Ok(term)
 }
 
@@ -101,7 +110,7 @@ pub async fn update_term(pool: &SqlitePool, id: i64, update: UpdateTerm) -> Resu
         r#"UPDATE terms
            SET french = ?, japanese = ?, category = ?, notes = ?
            WHERE id = ?
-           RETURNING id, french, japanese, category, notes, created_at"#,
+           RETURNING id as "id!", french, japanese, category, notes, created_at"#,
         french,
         japanese,
         category,
@@ -114,9 +123,8 @@ pub async fn update_term(pool: &SqlitePool, id: i64, update: UpdateTerm) -> Resu
 }
 
 pub async fn delete_term(pool: &SqlitePool, id: i64) -> Result<(), AppError> {
-    let result = sqlx::query!("DELETE FROM terms WHERE id = ?", id)
-        .execute(pool)
-        .await?;
+    let result: sqlx::sqlite::SqliteQueryResult =
+        sqlx::query!("DELETE FROM terms WHERE id = ?", id).execute(pool).await?;
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound);
     }
@@ -166,12 +174,8 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_list_terms_by_category(pool: SqlitePool) {
-        create_term(&pool, new_term("beurre", "バター", "ingredient"))
-            .await
-            .unwrap();
-        create_term(&pool, new_term("bouillabaisse", "ブイヤベース", "dish"))
-            .await
-            .unwrap();
+        create_term(&pool, new_term("beurre", "バター", "ingredient")).await.unwrap();
+        create_term(&pool, new_term("bouillabaisse", "ブイヤベース", "dish")).await.unwrap();
 
         let query = TermQuery { category: Some("ingredient".to_string()), q: None };
         let results = list_terms(&pool, &query).await.unwrap();
@@ -200,10 +204,7 @@ mod tests {
             .await
             .unwrap();
 
-        let update = UpdateTerm {
-            japanese: Some("澄ましバター".to_string()),
-            ..Default::default()
-        };
+        let update = UpdateTerm { japanese: Some("澄ましバター".to_string()), ..Default::default() };
         let updated = update_term(&pool, created.id, update).await.unwrap();
         assert_eq!(updated.french, "beurre");
         assert_eq!(updated.japanese, "澄ましバター");

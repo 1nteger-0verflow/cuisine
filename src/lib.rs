@@ -3,10 +3,7 @@ pub mod error;
 pub mod models;
 pub mod routes;
 
-use axum::{
-    Router,
-    routing::{delete, get, post, put},
-};
+use axum::{Router, routing::get};
 use sqlx::SqlitePool;
 
 pub fn create_app(pool: SqlitePool) -> Router {
