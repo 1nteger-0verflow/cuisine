@@ -132,6 +132,25 @@ recipe_ingredients recipe_id→recipes, term_id→terms, quantity, notes  PK(rec
 - `cargo fmt` — enforce consistent formatting in CI
 - Consider `cargo deny` for license/dependency auditing if the dependency tree grows
 
+## Term Registration Rules
+
+When adding or editing entries in `dishes`, `ingredients`, `utensils`, `techniques`:
+
+### Notes style
+- Write notes primarily in Japanese.
+- Any concept that corresponds to a registered term (in any of the four tables) **must** be written in its French form — not Japanese — so `linkNotes` auto-links it.
+- Do **not** wrap French terms in parentheses. Write them inline as plain text.
+
+### Adding missing terms (recursive self-containment)
+1. If a French term appears in a notes field and is not yet registered, add it.
+2. After writing notes for the newly added term, check whether any French terms in those notes are also unregistered — if so, add them too.
+3. Repeat until no new unregistered French terms remain (self-contained).
+
+### Partial-link safety
+- `linkNotes` uses substring matching without word boundaries.
+- Do **not** write a word in notes that contains a registered term as a prefix/substring (e.g. writing `tamiser` when `tamis` is registered creates a broken half-link).
+- If a longer phrase (e.g. `beurre d'escargot`) includes a registered shorter term (`beurre`, `escargot`), register the full phrase — the longer match wins and suppresses the partial match.
+
 ### Project-Specific Improvements (Backlog)
 - `AppError::BadRequest` could carry `{ field: &'static str, reason: String }` for richer error responses
 - `term.rs` `category` field: migrate from `String` to `enum Category` so invalid categories are rejected by the type system, not only by the DB `CHECK` constraint
