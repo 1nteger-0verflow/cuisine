@@ -3,11 +3,16 @@ pub mod error;
 pub mod models;
 pub mod routes;
 
-use axum::{Router, routing::get};
+use axum::{Router, routing::get, response::Html};
 use sqlx::SqlitePool;
+
+async fn index() -> Html<&'static str> {
+    Html(include_str!("../static/index.html"))
+}
 
 pub fn create_app(pool: SqlitePool) -> Router {
     Router::new()
+        .route("/", get(index))
         // dishes
         .route("/dishes", get(routes::dishes::list_dishes).post(routes::dishes::create_dish))
         .route(
