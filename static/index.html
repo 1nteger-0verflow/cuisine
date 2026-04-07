@@ -455,7 +455,7 @@ function render() {
   } else {
     items.forEach((it, i) => {
       const fr = it.name_french || it.french;
-      const ja = it.description_japanese || it.japanese || '';
+      const ja = it.description_japanese || '';
       let bdg = '';
       if (it.difficulty) {
         bdg = `<span class="badge ${it.difficulty}">${c.gl[it.difficulty]||it.difficulty}</span>`;
@@ -510,7 +510,7 @@ function renderDetail() {
       html += '<div class="sec"><div class="sec-title">食材</div>';
       item.ingredients.forEach(ing => {
         html += `<div class="ing-item">
-          <div><div class="ing-fr">${h(ing.french)}</div><div class="ing-ja">${h(ing.japanese)}</div></div>
+          <div><div class="ing-fr">${h(ing.french)}</div></div>
           <div class="ing-qty">${h(ing.quantity||'')}</div>
         </div>`;
       });
@@ -532,7 +532,6 @@ function renderDetail() {
     }
   } else {
     html += `<div class="d-fr">${h(item.french)}</div>`;
-    if (item.japanese) html += `<div class="d-ja">${h(item.japanese)}</div>`;
     if (item.reading)  html += `<div class="d-read">${h(item.reading)}</div>`;
     if (item.genre && c.gl[item.genre]) {
       html += `<div class="sec"><div class="sec-title">カテゴリー</div>
@@ -546,7 +545,7 @@ function renderDetail() {
       <div class="rel-list" id="relList">`;
     (item.related_terms||[]).forEach(r => {
       html += `<div class="rel-item">
-        <div class="rel-info"><div class="rel-fr">${h(r.french)}</div><div class="rel-ja">${h(r.japanese)}</div></div>
+        <div class="rel-info"><div class="rel-fr">${h(r.french)}</div></div>
         <div class="rel-meta">
           <span class="rel-cat">${CAT_LBL[r.category]||r.category}</span>
           ${r.relation_type?`<span class="rel-type">${h(r.relation_type)}</span>`:''}
@@ -589,7 +588,7 @@ async function loadRelCandidates() {
   sel.innerHTML = '<option>読込中…</option>';
   try {
     const list = await api('GET', CAT_EP[cat]);
-    sel.innerHTML = list.map(i => `<option value="${i.id}">${i.french}（${i.japanese||''}）</option>`).join('');
+    sel.innerHTML = list.map(i => `<option value="${i.id}">${i.french}</option>`).join('');
   } catch(e) {
     sel.innerHTML = '<option>エラー</option>';
   }
@@ -650,7 +649,6 @@ function buildForm(data) {
     ]);
   } else {
     html += fg('フランス語 *', 'french', data.french);
-    html += fg('日本語 *', 'japanese', data.japanese);
     html += fg('読み方', 'reading', data.reading);
     if (c.genres.length) {
       html += fgSelect('カテゴリー', 'genre', data.genre,

@@ -13,9 +13,9 @@ pub async fn list_dishes(pool: &SqlitePool, query: &DishQuery) -> Result<Vec<Dis
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Dish,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM dishes
-                   WHERE genre = ? AND (french LIKE ? OR japanese LIKE ?)
+                   WHERE genre = ? AND (french LIKE ? OR notes LIKE ?)
                    ORDER BY french"#,
                 g, pattern, pattern
             )
@@ -25,7 +25,7 @@ pub async fn list_dishes(pool: &SqlitePool, query: &DishQuery) -> Result<Vec<Dis
         (Some(g), None) => {
             sqlx::query_as!(
                 Dish,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM dishes WHERE genre = ? ORDER BY french"#,
                 g
             )
@@ -36,9 +36,9 @@ pub async fn list_dishes(pool: &SqlitePool, query: &DishQuery) -> Result<Vec<Dis
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Dish,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM dishes
-                   WHERE french LIKE ? OR japanese LIKE ?
+                   WHERE french LIKE ? OR notes LIKE ?
                    ORDER BY french"#,
                 pattern, pattern
             )
@@ -48,7 +48,7 @@ pub async fn list_dishes(pool: &SqlitePool, query: &DishQuery) -> Result<Vec<Dis
         (None, None) => {
             sqlx::query_as!(
                 Dish,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM dishes ORDER BY french"#
             )
             .fetch_all(pool)
@@ -61,7 +61,7 @@ pub async fn list_dishes(pool: &SqlitePool, query: &DishQuery) -> Result<Vec<Dis
 pub async fn get_dish(pool: &SqlitePool, id: i64) -> Result<Dish, AppError> {
     let dish: Option<Dish> = sqlx::query_as!(
         Dish,
-        r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+        r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
            FROM dishes WHERE id = ?"#,
         id
     )
@@ -79,10 +79,10 @@ pub async fn get_dish_detail(pool: &SqlitePool, id: i64) -> Result<DishDetail, A
 pub async fn create_dish(pool: &SqlitePool, new: NewDish) -> Result<Dish, AppError> {
     let dish = sqlx::query_as!(
         Dish,
-        r#"INSERT INTO dishes (french, japanese, reading, genre, notes)
-           VALUES (?, ?, ?, ?, ?)
-           RETURNING id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at"#,
-        new.french, new.japanese, new.reading, new.genre, new.notes
+        r#"INSERT INTO dishes (french, reading, genre, notes)
+           VALUES (?, ?, ?, ?)
+           RETURNING id as "id!", french, reading, genre as "genre: _", notes, created_at"#,
+        new.french, new.reading, new.genre, new.notes
     )
     .fetch_one(pool)
     .await?;
@@ -91,18 +91,17 @@ pub async fn create_dish(pool: &SqlitePool, new: NewDish) -> Result<Dish, AppErr
 
 pub async fn update_dish(pool: &SqlitePool, id: i64, update: UpdateDish) -> Result<Dish, AppError> {
     let existing = get_dish(pool, id).await?;
-    let french   = update.french.unwrap_or(existing.french);
-    let japanese = update.japanese.unwrap_or(existing.japanese);
-    let reading  = update.reading.or(existing.reading);
-    let genre    = update.genre.or(existing.genre);
-    let notes    = update.notes.or(existing.notes);
+    let french  = update.french.unwrap_or(existing.french);
+    let reading = update.reading.or(existing.reading);
+    let genre   = update.genre.or(existing.genre);
+    let notes   = update.notes.or(existing.notes);
 
     let dish = sqlx::query_as!(
         Dish,
-        r#"UPDATE dishes SET french=?, japanese=?, reading=?, genre=?, notes=?
+        r#"UPDATE dishes SET french=?, reading=?, genre=?, notes=?
            WHERE id=?
-           RETURNING id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at"#,
-        french, japanese, reading, genre, notes, id
+           RETURNING id as "id!", french, reading, genre as "genre: _", notes, created_at"#,
+        french, reading, genre, notes, id
     )
     .fetch_one(pool)
     .await?;

@@ -15,9 +15,9 @@ pub async fn list_techniques(
         let pattern = format!("%{}%", q);
         sqlx::query_as!(
             Technique,
-            r#"SELECT id as "id!", french, japanese, reading, notes, created_at
+            r#"SELECT id as "id!", french, reading, notes, created_at
                FROM techniques
-               WHERE french LIKE ? OR japanese LIKE ?
+               WHERE french LIKE ? OR notes LIKE ?
                ORDER BY french"#,
             pattern, pattern
         )
@@ -26,7 +26,7 @@ pub async fn list_techniques(
     } else {
         sqlx::query_as!(
             Technique,
-            r#"SELECT id as "id!", french, japanese, reading, notes, created_at
+            r#"SELECT id as "id!", french, reading, notes, created_at
                FROM techniques ORDER BY french"#
         )
         .fetch_all(pool)
@@ -38,7 +38,7 @@ pub async fn list_techniques(
 pub async fn get_technique(pool: &SqlitePool, id: i64) -> Result<Technique, AppError> {
     let technique: Option<Technique> = sqlx::query_as!(
         Technique,
-        r#"SELECT id as "id!", french, japanese, reading, notes, created_at
+        r#"SELECT id as "id!", french, reading, notes, created_at
            FROM techniques WHERE id = ?"#,
         id
     )
@@ -59,10 +59,10 @@ pub async fn get_technique_detail(
 pub async fn create_technique(pool: &SqlitePool, new: NewTechnique) -> Result<Technique, AppError> {
     let technique = sqlx::query_as!(
         Technique,
-        r#"INSERT INTO techniques (french, japanese, reading, notes)
-           VALUES (?, ?, ?, ?)
-           RETURNING id as "id!", french, japanese, reading, notes, created_at"#,
-        new.french, new.japanese, new.reading, new.notes
+        r#"INSERT INTO techniques (french, reading, notes)
+           VALUES (?, ?, ?)
+           RETURNING id as "id!", french, reading, notes, created_at"#,
+        new.french, new.reading, new.notes
     )
     .fetch_one(pool)
     .await?;
@@ -75,17 +75,16 @@ pub async fn update_technique(
     update: UpdateTechnique,
 ) -> Result<Technique, AppError> {
     let existing = get_technique(pool, id).await?;
-    let french   = update.french.unwrap_or(existing.french);
-    let japanese = update.japanese.unwrap_or(existing.japanese);
-    let reading  = update.reading.or(existing.reading);
-    let notes    = update.notes.or(existing.notes);
+    let french  = update.french.unwrap_or(existing.french);
+    let reading = update.reading.or(existing.reading);
+    let notes   = update.notes.or(existing.notes);
 
     let technique = sqlx::query_as!(
         Technique,
-        r#"UPDATE techniques SET french=?, japanese=?, reading=?, notes=?
+        r#"UPDATE techniques SET french=?, reading=?, notes=?
            WHERE id=?
-           RETURNING id as "id!", french, japanese, reading, notes, created_at"#,
-        french, japanese, reading, notes, id
+           RETURNING id as "id!", french, reading, notes, created_at"#,
+        french, reading, notes, id
     )
     .fetch_one(pool)
     .await?;

@@ -41,7 +41,7 @@ async fn test_create_dish_returns_201() {
     let app = test_app().await;
     let response = post_dish(
         &app,
-        json!({ "french": "bouillabaisse", "japanese": "ブイヤベース", "genre": "stew" }),
+        json!({ "french": "bouillabaisse", "genre": "stew" }),
     )
     .await;
     assert_eq!(response.status(), 201);
@@ -63,7 +63,7 @@ async fn test_get_dish_not_found() {
 async fn test_get_dish_includes_related_terms() {
     let app = test_app().await;
     let created =
-        body_json(post_dish(&app, json!({ "french": "pot-au-feu", "japanese": "ポトフ" })).await)
+        body_json(post_dish(&app, json!({ "french": "pot-au-feu" })).await)
             .await;
     let id = created["id"].as_i64().unwrap();
 
@@ -80,7 +80,7 @@ async fn test_get_dish_includes_related_terms() {
 #[tokio::test]
 async fn test_list_dishes_filter_by_genre() {
     let app = test_app().await;
-    post_dish(&app, json!({ "french": "crème brûlée", "japanese": "クレームブリュレ", "genre": "dessert" })).await;
+    post_dish(&app, json!({ "french": "crème brûlée", "genre": "dessert" })).await;
 
     let response = app
         .oneshot(Request::get("/dishes?genre=dessert").body(Body::empty()).unwrap())
@@ -96,7 +96,7 @@ async fn test_list_dishes_filter_by_genre() {
 async fn test_update_dish_partial() {
     let app = test_app().await;
     let created =
-        body_json(post_dish(&app, json!({ "french": "crêpe", "japanese": "クレープ" })).await).await;
+        body_json(post_dish(&app, json!({ "french": "crêpe" })).await).await;
     let id = created["id"].as_i64().unwrap();
 
     let response = app
@@ -120,7 +120,7 @@ async fn test_update_dish_partial() {
 async fn test_delete_dish_returns_204() {
     let app = test_app().await;
     let created =
-        body_json(post_dish(&app, json!({ "french": "quiche", "japanese": "キッシュ" })).await).await;
+        body_json(post_dish(&app, json!({ "french": "quiche" })).await).await;
     let id = created["id"].as_i64().unwrap();
 
     let response = app

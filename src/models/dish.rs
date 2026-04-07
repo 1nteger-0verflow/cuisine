@@ -19,7 +19,6 @@ pub enum DishGenre {
 pub struct Dish {
     pub id: i64,
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub genre: Option<DishGenre>,
     pub notes: Option<String>,
@@ -36,7 +35,6 @@ pub struct DishDetail {
 #[derive(Debug, Deserialize)]
 pub struct NewDish {
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub genre: Option<DishGenre>,
     pub notes: Option<String>,
@@ -45,7 +43,6 @@ pub struct NewDish {
 #[derive(Debug, Default, Deserialize)]
 pub struct UpdateDish {
     pub french: Option<String>,
-    pub japanese: Option<String>,
     pub reading: Option<String>,
     pub genre: Option<DishGenre>,
     pub notes: Option<String>,

@@ -41,7 +41,7 @@ async fn test_create_technique_returns_201() {
     let app = test_app().await;
     let response = post_technique(
         &app,
-        json!({ "french": "monter au beurre", "japanese": "モンテ・オ・ブール", "reading": "モンテ・オ・ブール" }),
+        json!({ "french": "monter au beurre", "reading": "モンテ・オ・ブール" }),
     )
     .await;
     assert_eq!(response.status(), 201);
@@ -61,7 +61,7 @@ async fn test_get_technique_not_found() {
 async fn test_get_technique_includes_related_terms() {
     let app = test_app().await;
     let created = body_json(
-        post_technique(&app, json!({ "french": "sauté", "japanese": "ソテー" })).await,
+        post_technique(&app, json!({ "french": "sauté" })).await,
     )
     .await;
     let id = created["id"].as_i64().unwrap();
@@ -81,10 +81,10 @@ async fn test_search_techniques() {
     let app = test_app().await;
     post_technique(
         &app,
-        json!({ "french": "beurre noisette", "japanese": "ブール・ノワゼット" }),
+        json!({ "french": "beurre noisette" }),
     )
     .await;
-    post_technique(&app, json!({ "french": "beurre blanc", "japanese": "ブール・ブラン" })).await;
+    post_technique(&app, json!({ "french": "beurre blanc" })).await;
 
     let response = app
         .oneshot(Request::get("/techniques?q=noisette").body(Body::empty()).unwrap())
@@ -101,7 +101,7 @@ async fn test_search_techniques() {
 async fn test_delete_technique_returns_204() {
     let app = test_app().await;
     let created =
-        body_json(post_technique(&app, json!({ "french": "émulsifier", "japanese": "乳化する" })).await)
+        body_json(post_technique(&app, json!({ "french": "émulsifier" })).await)
             .await;
     let id = created["id"].as_i64().unwrap();
 

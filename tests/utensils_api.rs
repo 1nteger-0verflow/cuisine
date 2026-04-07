@@ -41,7 +41,7 @@ async fn test_create_utensil_returns_201() {
     let app = test_app().await;
     let response = post_utensil(
         &app,
-        json!({ "french": "chinois", "japanese": "シノワ", "reading": "シノワ", "notes": "円錐形の裏ごし器" }),
+        json!({ "french": "chinois", "reading": "シノワ", "notes": "円錐形の裏ごし器" }),
     )
     .await;
     assert_eq!(response.status(), 201);
@@ -64,7 +64,7 @@ async fn test_relation_cross_category() {
 
     // Create utensil and technique
     let utensil = body_json(
-        post_utensil(&app, json!({ "french": "tamis", "japanese": "タミ" })).await,
+        post_utensil(&app, json!({ "french": "tamis" })).await,
     )
     .await;
     let u_id = utensil["id"].as_i64().unwrap();
@@ -76,7 +76,7 @@ async fn test_relation_cross_category() {
                     .header("content-type", "application/json")
                     .body(
                         Body::from(
-                            json!({ "french": "tamiser", "japanese": "裏ごしする" }).to_string(),
+                            json!({ "french": "tamiser" }).to_string(),
                         ),
                     )
                     .unwrap(),
@@ -146,7 +146,7 @@ async fn test_relation_cross_category() {
 async fn test_delete_utensil_returns_204() {
     let app = test_app().await;
     let created =
-        body_json(post_utensil(&app, json!({ "french": "louche", "japanese": "レードル" })).await)
+        body_json(post_utensil(&app, json!({ "french": "louche" })).await)
             .await;
     let id = created["id"].as_i64().unwrap();
 

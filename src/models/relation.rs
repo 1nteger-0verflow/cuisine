@@ -16,7 +16,6 @@ pub struct RelatedTermRef {
     pub category: TermCategory,
     pub id: i64,
     pub french: String,
-    pub japanese: String,
     pub relation_type: String,
 }
 

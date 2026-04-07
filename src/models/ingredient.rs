@@ -21,7 +21,6 @@ pub enum IngredientGenre {
 pub struct Ingredient {
     pub id: i64,
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub genre: Option<IngredientGenre>,
     pub notes: Option<String>,
@@ -38,7 +37,6 @@ pub struct IngredientDetail {
 #[derive(Debug, Deserialize)]
 pub struct NewIngredient {
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub genre: Option<IngredientGenre>,
     pub notes: Option<String>,
@@ -47,7 +45,6 @@ pub struct NewIngredient {
 #[derive(Debug, Default, Deserialize)]
 pub struct UpdateIngredient {
     pub french: Option<String>,
-    pub japanese: Option<String>,
     pub reading: Option<String>,
     pub genre: Option<IngredientGenre>,
     pub notes: Option<String>,

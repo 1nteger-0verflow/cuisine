@@ -7,7 +7,6 @@ use crate::models::relation::RelatedTermRef;
 pub struct Technique {
     pub id: i64,
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub notes: Option<String>,
     pub created_at: String,
@@ -23,7 +22,6 @@ pub struct TechniqueDetail {
 #[derive(Debug, Deserialize)]
 pub struct NewTechnique {
     pub french: String,
-    pub japanese: String,
     pub reading: Option<String>,
     pub notes: Option<String>,
 }
@@ -31,7 +29,6 @@ pub struct NewTechnique {
 #[derive(Debug, Default, Deserialize)]
 pub struct UpdateTechnique {
     pub french: Option<String>,
-    pub japanese: Option<String>,
     pub reading: Option<String>,
     pub notes: Option<String>,
 }

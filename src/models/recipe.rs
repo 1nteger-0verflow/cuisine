@@ -31,7 +31,6 @@ pub struct RecipeDetail {
 pub struct RecipeIngredient {
     pub ingredient_id: i64,
     pub french: String,
-    pub japanese: String,
     pub quantity: Option<String>,
     pub notes: Option<String>,
 }

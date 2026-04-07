@@ -16,7 +16,6 @@ pub async fn get_related_terms(
         r#"SELECT refs.other_cat  AS "category: _",
                   refs.other_id   AS "id!",
                   COALESCE(d.french,  i.french,  u.french,  tq.french)   AS "french!",
-                  COALESCE(d.japanese,i.japanese,u.japanese,tq.japanese) AS "japanese!",
                   refs.relation_type
            FROM (
              SELECT to_category   AS other_cat, to_id   AS other_id, relation_type

@@ -41,7 +41,7 @@ async fn test_create_ingredient_returns_201() {
     let app = test_app().await;
     let response = post_ingredient(
         &app,
-        json!({ "french": "safran", "japanese": "サフラン", "genre": "spice", "reading": "サフラン" }),
+        json!({ "french": "safran", "genre": "spice", "reading": "サフラン" }),
     )
     .await;
     assert_eq!(response.status(), 201);
@@ -65,7 +65,7 @@ async fn test_get_ingredient_not_found() {
 async fn test_get_ingredient_includes_related_terms() {
     let app = test_app().await;
     let created = body_json(
-        post_ingredient(&app, json!({ "french": "beurre", "japanese": "バター" })).await,
+        post_ingredient(&app, json!({ "french": "beurre" })).await,
     )
     .await;
     let id = created["id"].as_i64().unwrap();
@@ -83,7 +83,7 @@ async fn test_get_ingredient_includes_related_terms() {
 #[tokio::test]
 async fn test_list_ingredients_filter_by_genre() {
     let app = test_app().await;
-    post_ingredient(&app, json!({ "french": "thym", "japanese": "タイム", "genre": "herb" })).await;
+    post_ingredient(&app, json!({ "french": "thym", "genre": "herb" })).await;
 
     let response = app
         .oneshot(Request::get("/ingredients?genre=herb").body(Body::empty()).unwrap())
@@ -102,7 +102,7 @@ async fn test_crud_round_trip() {
     let created = body_json(
         post_ingredient(
             &app,
-            json!({ "french": "safran", "japanese": "サフラン", "genre": "spice" }),
+            json!({ "french": "safran", "genre": "spice" }),
         )
         .await,
     )

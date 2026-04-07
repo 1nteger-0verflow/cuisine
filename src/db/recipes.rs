@@ -34,7 +34,7 @@ pub async fn get_recipe_detail(pool: &SqlitePool, id: i64) -> Result<RecipeDetai
 
     let ingredients = sqlx::query_as!(
         RecipeIngredient,
-        r#"SELECT i.id as "ingredient_id!", i.french, i.japanese, ri.quantity, ri.notes
+        r#"SELECT i.id as "ingredient_id!", i.french, ri.quantity, ri.notes
            FROM recipe_ingredients ri
            JOIN ingredients i ON i.id = ri.ingredient_id
            WHERE ri.recipe_id = ?
@@ -152,7 +152,6 @@ mod tests {
             &pool,
             NewIngredient {
                 french: "safran".to_string(),
-                japanese: "サフラン".to_string(),
                 reading: None,
                 genre: None,
                 notes: None,
@@ -174,7 +173,6 @@ mod tests {
         let detail = get_recipe_detail(&pool, recipe.id).await.unwrap();
         assert_eq!(detail.ingredients.len(), 1);
         assert_eq!(detail.ingredients[0].french, "safran");
-        assert_eq!(detail.ingredients[0].japanese, "サフラン");
         assert_eq!(detail.ingredients[0].quantity.as_deref(), Some("1 pinch"));
     }
 
@@ -208,7 +206,6 @@ mod tests {
             &pool,
             NewIngredient {
                 french: "safran".to_string(),
-                japanese: "サフラン".to_string(),
                 reading: None,
                 genre: None,
                 notes: None,

@@ -16,9 +16,9 @@ pub async fn list_ingredients(
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Ingredient,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM ingredients
-                   WHERE genre = ? AND (french LIKE ? OR japanese LIKE ?)
+                   WHERE genre = ? AND (french LIKE ? OR notes LIKE ?)
                    ORDER BY french"#,
                 g, pattern, pattern
             )
@@ -28,7 +28,7 @@ pub async fn list_ingredients(
         (Some(g), None) => {
             sqlx::query_as!(
                 Ingredient,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM ingredients WHERE genre = ? ORDER BY french"#,
                 g
             )
@@ -39,9 +39,9 @@ pub async fn list_ingredients(
             let pattern = format!("%{}%", q);
             sqlx::query_as!(
                 Ingredient,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM ingredients
-                   WHERE french LIKE ? OR japanese LIKE ?
+                   WHERE french LIKE ? OR notes LIKE ?
                    ORDER BY french"#,
                 pattern, pattern
             )
@@ -51,7 +51,7 @@ pub async fn list_ingredients(
         (None, None) => {
             sqlx::query_as!(
                 Ingredient,
-                r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+                r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
                    FROM ingredients ORDER BY french"#
             )
             .fetch_all(pool)
@@ -64,7 +64,7 @@ pub async fn list_ingredients(
 pub async fn get_ingredient(pool: &SqlitePool, id: i64) -> Result<Ingredient, AppError> {
     let ingredient: Option<Ingredient> = sqlx::query_as!(
         Ingredient,
-        r#"SELECT id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at
+        r#"SELECT id as "id!", french, reading, genre as "genre: _", notes, created_at
            FROM ingredients WHERE id = ?"#,
         id
     )
@@ -89,10 +89,10 @@ pub async fn create_ingredient(
 ) -> Result<Ingredient, AppError> {
     let ingredient = sqlx::query_as!(
         Ingredient,
-        r#"INSERT INTO ingredients (french, japanese, reading, genre, notes)
-           VALUES (?, ?, ?, ?, ?)
-           RETURNING id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at"#,
-        new.french, new.japanese, new.reading, new.genre, new.notes
+        r#"INSERT INTO ingredients (french, reading, genre, notes)
+           VALUES (?, ?, ?, ?)
+           RETURNING id as "id!", french, reading, genre as "genre: _", notes, created_at"#,
+        new.french, new.reading, new.genre, new.notes
     )
     .fetch_one(pool)
     .await?;
@@ -105,18 +105,17 @@ pub async fn update_ingredient(
     update: UpdateIngredient,
 ) -> Result<Ingredient, AppError> {
     let existing = get_ingredient(pool, id).await?;
-    let french   = update.french.unwrap_or(existing.french);
-    let japanese = update.japanese.unwrap_or(existing.japanese);
-    let reading  = update.reading.or(existing.reading);
-    let genre    = update.genre.or(existing.genre);
-    let notes    = update.notes.or(existing.notes);
+    let french  = update.french.unwrap_or(existing.french);
+    let reading = update.reading.or(existing.reading);
+    let genre   = update.genre.or(existing.genre);
+    let notes   = update.notes.or(existing.notes);
 
     let ingredient = sqlx::query_as!(
         Ingredient,
-        r#"UPDATE ingredients SET french=?, japanese=?, reading=?, genre=?, notes=?
+        r#"UPDATE ingredients SET french=?, reading=?, genre=?, notes=?
            WHERE id=?
-           RETURNING id as "id!", french, japanese, reading, genre as "genre: _", notes, created_at"#,
-        french, japanese, reading, genre, notes, id
+           RETURNING id as "id!", french, reading, genre as "genre: _", notes, created_at"#,
+        french, reading, genre, notes, id
     )
     .fetch_one(pool)
     .await?;
