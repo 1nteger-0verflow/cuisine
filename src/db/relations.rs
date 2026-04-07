@@ -26,9 +26,10 @@ pub async fn get_related_terms(
            ) refs
            LEFT JOIN dishes      d  ON refs.other_cat = 'dish'       AND d.id  = refs.other_id
            LEFT JOIN ingredients i  ON refs.other_cat = 'ingredient' AND i.id  = refs.other_id
+           LEFT JOIN sauces      s  ON refs.other_cat = 'sauce'      AND s.id  = refs.other_id
            LEFT JOIN utensils    u  ON refs.other_cat = 'utensil'    AND u.id  = refs.other_id
            LEFT JOIN techniques  tq ON refs.other_cat = 'technique'  AND tq.id = refs.other_id
-           ORDER BY COALESCE(d.french, i.french, u.french, tq.french)"#,
+           ORDER BY COALESCE(d.french, i.french, s.french, u.french, tq.french)"#,
         cat, id, cat, id
     )
     .fetch_all(pool)
@@ -84,6 +85,7 @@ pub fn category_str(cat: &TermCategory) -> &'static str {
     match cat {
         TermCategory::Dish       => "dish",
         TermCategory::Ingredient => "ingredient",
+        TermCategory::Sauce      => "sauce",
         TermCategory::Utensil    => "utensil",
         TermCategory::Technique  => "technique",
     }

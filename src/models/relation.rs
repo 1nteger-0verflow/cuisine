@@ -7,6 +7,7 @@ use sqlx::FromRow;
 pub enum TermCategory {
     Dish,
     Ingredient,
+    Sauce,
     Utensil,
     Technique,
 }

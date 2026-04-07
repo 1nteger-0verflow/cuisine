@@ -268,6 +268,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a5 5 0 0 0-5 5c0 2.5 1.5 4.5 5 5v10"/><path d="M17 7c0-2.76-2.24-5-5-5"/></svg>
     食材
   </button>
+  <button class="nav-btn" data-tab="sauces" onclick="switchTab('sauces',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12c0 4 3 7 7 7s7-3 7-7"/><path d="M5 12V6a7 7 0 0 1 14 0v6"/><path d="M12 19v2"/></svg>
+    ソース
+  </button>
   <button class="nav-btn" data-tab="utensils" onclick="switchTab('utensils',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 2v8l-2 4h14l-2-4V2M5 14v8M19 14v8M12 2v12"/></svg>
     器具
@@ -329,6 +333,11 @@ const TABS = {
     genres: ['dairy','herb','spice','vegetable','mushroom','protein','grain','seafood'],
     gl: {dairy:'乳製品', herb:'ハーブ', spice:'スパイス', vegetable:'野菜', mushroom:'きのこ', protein:'タンパク質', grain:'穀物', seafood:'魚介'},
   },
+  sauces: {
+    label: 'ソース', ep: '/sauces', genreKey: 'genre',
+    genres: ['mere','derivee','froide','emulsionnee','beurre'],
+    gl: {mere:'母ソース', derivee:'派生ソース', froide:'冷製', emulsionnee:'乳化', beurre:'バター'},
+  },
   utensils:   { label: '調理器具', ep: '/utensils',   genres: [], gl: {} },
   techniques: { label: 'テクニック', ep: '/techniques', genres: [], gl: {} },
   recipes: {
@@ -339,20 +348,21 @@ const TABS = {
   },
 };
 
-const CAT_EP = { dish:'/dishes', ingredient:'/ingredients', utensil:'/utensils', technique:'/techniques' };
-const CAT_LBL = { dish:'料理', ingredient:'食材', utensil:'器具', technique:'テクニック' };
+const CAT_EP = { dish:'/dishes', ingredient:'/ingredients', sauce:'/sauces', utensil:'/utensils', technique:'/techniques' };
+const CAT_LBL = { dish:'料理', ingredient:'食材', sauce:'ソース', utensil:'器具', technique:'テクニック' };
 
 // ── Glossary cache & note linking ──────────────────────
 async function ensureGlossaryCache() {
   if (glossaryCache !== null) return;
   try {
-    const [dishes, ingredients, utensils, techniques] = await Promise.all([
+    const [dishes, ingredients, sauces, utensils, techniques] = await Promise.all([
       api('GET', '/dishes'), api('GET', '/ingredients'),
-      api('GET', '/utensils'), api('GET', '/techniques'),
+      api('GET', '/sauces'), api('GET', '/utensils'), api('GET', '/techniques'),
     ]);
     glossaryCache = [
       ...dishes.map(d      => ({ cat: 'dish',       id: d.id, french: d.french })),
       ...ingredients.map(i => ({ cat: 'ingredient', id: i.id, french: i.french })),
+      ...sauces.map(s      => ({ cat: 'sauce',      id: s.id, french: s.french })),
       ...utensils.map(u    => ({ cat: 'utensil',    id: u.id, french: u.french })),
       ...techniques.map(t  => ({ cat: 'technique',  id: t.id, french: t.french })),
     ];
@@ -386,7 +396,7 @@ function linkNotes(text) {
 }
 
 async function openTermById(cat, id) {
-  const tabMap = { dish:'dishes', ingredient:'ingredients', utensil:'utensils', technique:'techniques' };
+  const tabMap = { dish:'dishes', ingredient:'ingredients', sauce:'sauces', utensil:'utensils', technique:'techniques' };
   const newTab = tabMap[cat];
   if (!newTab) return;
   tab = newTab;
@@ -560,6 +570,7 @@ function renderDetail() {
           <select id="relCat" onchange="loadRelCandidates()">
             <option value="dish">料理</option>
             <option value="ingredient">食材</option>
+            <option value="sauce">ソース</option>
             <option value="utensil">器具</option>
             <option value="technique">テクニック</option>
           </select>

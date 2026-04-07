@@ -64,6 +64,25 @@ pub fn create_app(pool: SqlitePool) -> Router {
             "/utensils/{id}/relations/{to_cat}/{to_id}",
             axum::routing::delete(routes::utensils::delete_relation),
         )
+        // sauces
+        .route(
+            "/sauces",
+            get(routes::sauces::list_sauces).post(routes::sauces::create_sauce),
+        )
+        .route(
+            "/sauces/{id}",
+            get(routes::sauces::get_sauce)
+                .put(routes::sauces::update_sauce)
+                .delete(routes::sauces::delete_sauce),
+        )
+        .route(
+            "/sauces/{id}/relations",
+            axum::routing::post(routes::sauces::add_relation),
+        )
+        .route(
+            "/sauces/{id}/relations/{to_cat}/{to_id}",
+            axum::routing::delete(routes::sauces::delete_relation),
+        )
         // techniques
         .route(
             "/techniques",
